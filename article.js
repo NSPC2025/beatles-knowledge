@@ -9,7 +9,7 @@ fetch("data/articles.json")
     if (!article) return;
 
     document.getElementById("title").textContent = article.title;
-    document.getElementById("content").textContent = article.content;
+    document.getElementById("content").innerHTML = article.content;
 
     const tags = document.getElementById("tags");
     tags.innerHTML = (article.tags || [])
