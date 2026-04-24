@@ -24,7 +24,7 @@ function render(list) {
 
     div.innerHTML = `
       <h3>${a.title}</h3>
-      <p>${a.content}</p>
+      <p>${a.content.slice(0, 180)}...</p>
       <div class="tags">${tagsHTML}</div>
     `;
 
