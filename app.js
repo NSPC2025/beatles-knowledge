@@ -22,15 +22,20 @@ function render(list) {
       .map(tag => `<span class="tag">${tag}</span>`)
       .join("");
 
+    // Fix content preview (array or string)
+    const previewText = Array.isArray(a.content)
+      ? a.content.join(" ")
+      : a.content;
+
     div.innerHTML = `
       <h3>${a.title}</h3>
-      <p>${a.content.slice(0, 180)}...</p>
+      <p>${previewText.slice(0, 180)}...</p>
       <div class="tags">${tagsHTML}</div>
     `;
 
-div.onclick = () => {
-  window.location.href = `article.html?id=${a.id}`;
-};
+    div.onclick = () => {
+      window.location.href = `article.html?id=${a.id}`;
+    };
 
     container.appendChild(div);
   });
@@ -40,11 +45,17 @@ div.onclick = () => {
 document.getElementById("search").addEventListener("input", e => {
   const q = e.target.value.toLowerCase();
 
-  const filtered = articles.filter(a =>
-    a.title.toLowerCase().includes(q) ||
-    a.content.toLowerCase().includes(q) ||
-    (a.tags || []).join(" ").toLowerCase().includes(q)
-  );
+  const filtered = articles.filter(a => {
+    const text = Array.isArray(a.content)
+      ? a.content.join(" ")
+      : a.content;
+
+    return (
+      a.title.toLowerCase().includes(q) ||
+      text.toLowerCase().includes(q) ||
+      (a.tags || []).join(" ").toLowerCase().includes(q)
+    );
+  });
 
   render(filtered);
 });
