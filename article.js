@@ -9,7 +9,9 @@ fetch("data/articles.json")
     if (!article) return;
 
     document.getElementById("title").textContent = article.title;
-    document.getElementById("content").innerHTML = article.content;
+    document.getElementById("content").innerHTML = article.content
+  .map(paragraph => `<p>${paragraph}</p>`)
+  .join("");
 
     const tags = document.getElementById("tags");
     tags.innerHTML = (article.tags || [])
