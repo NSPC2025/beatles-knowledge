@@ -1,8 +1,16 @@
 [
   {
     "id": 1,
-    "title": "Welcome",
-    "content": "This is your Beatles knowledge base...",
-    "tags": ["intro"]
+    "title": "Myth, Media, and the Public Image of The Beatles",
+    "category": "media",
+    "content": "The Beatles have become so surrounded by myth, fantasy and speculation that determining anything other than the basic facts of their lives has become virtually impossible. The way the public perceives the really famous is an amalgamation of information filtered through layers of the media, embellished, stereotyped, politicised according to the position of the writers and editors involved.",
+    "tags": ["Beatles", "media", "myth", "public perception"]
+  },
+  {
+    "id": 2,
+    "title": "Why Reliable Beatles Interviews Are Rare",
+    "category": "history",
+    "content": "In the case of rock stars, particularly unreliable since the media – TV shows and the popular music press – are more a port of the entertainment business than serious journalism of record, a situation exacerbated by musicians, who usually only give interviews to promote new product. There was virtually no serious coverage given to pop music by the press until the latter half of the sixties, when the underground press – East Village Other, Berkely Barb, IT – started up, and at the end of the decade, when magazines like Rolling Stone began publication. As a consequence there are very few reliable interviews with the Beatles at the height of their fame.",
+    "tags": ["Beatles", "journalism", "1960s", "interviews"]
   }
 ]
