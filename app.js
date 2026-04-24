@@ -1,5 +1,6 @@
 let articles = [];
 
+// Load data
 fetch('data/articles.json')
   .then(res => res.json())
   .then(data => {
@@ -7,6 +8,7 @@ fetch('data/articles.json')
     render(articles);
   });
 
+// Render articles
 function render(list) {
   const container = document.getElementById("articles");
   container.innerHTML = "";
@@ -15,6 +17,7 @@ function render(list) {
     const div = document.createElement("div");
     div.className = "article";
 
+    // Build tags
     const tagsHTML = (a.tags || [])
       .map(tag => `<span class="tag">${tag}</span>`)
       .join("");
@@ -25,10 +28,16 @@ function render(list) {
       <div class="tags">${tagsHTML}</div>
     `;
 
+    // Click behavior (next step will turn this into real page navigation)
+    div.onclick = () => {
+      alert("Next step: this will open a full article page");
+    };
+
     container.appendChild(div);
   });
 }
 
+// Search functionality
 document.getElementById("search").addEventListener("input", e => {
   const q = e.target.value.toLowerCase();
 
