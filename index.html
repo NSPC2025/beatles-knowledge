@@ -7,14 +7,25 @@
 </head>
 <body>
 
-<header>
-  <h1>Beatles Knowledge Base</h1>
-  <p>An independent research archive</p>
-</header>
+  <nav class="navbar">
+    <div class="nav-inner">
+      <div class="logo">🎸 Beatles Archive</div>
+      <div class="nav-links">
+        <span>Articles</span>
+        <span>Timeline</span>
+        <span>About</span>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <h1>Beatles Knowledge Base</h1>
+    <p>A structured archive of Beatles history, media, and analysis</p>
+  </header>
 
   <div class="container">
     <input id="search" placeholder="Search articles...">
-    <div id="articles"></div>
+    <div id="articles" class="grid"></div>
   </div>
 
   <script src="app.js"></script>
