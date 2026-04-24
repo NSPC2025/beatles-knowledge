@@ -15,10 +15,14 @@ function render(list) {
     const div = document.createElement("div");
     div.className = "article";
 
+    const tagsHTML = (a.tags || [])
+      .map(tag => `<span class="tag">${tag}</span>`)
+      .join("");
+
     div.innerHTML = `
       <h3>${a.title}</h3>
       <p>${a.content}</p>
-      <small>${(a.tags || []).join(", ")}</small>
+      <div class="tags">${tagsHTML}</div>
     `;
 
     container.appendChild(div);
