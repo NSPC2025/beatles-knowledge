@@ -28,10 +28,9 @@ function render(list) {
       <div class="tags">${tagsHTML}</div>
     `;
 
-    // Click behavior (next step will turn this into real page navigation)
-    div.onclick = () => {
-      alert("Next step: this will open a full article page");
-    };
+div.onclick = () => {
+  window.location.href = `article.html?id=${a.id}`;
+};
 
     container.appendChild(div);
   });
