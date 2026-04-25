@@ -3,38 +3,57 @@ import { getArticles } from "./dataLoader.js";
 const params = new URLSearchParams(window.location.search);
 const id = parseInt(params.get("id"));
 
+let allArticles = [];
+
 async function init() {
-  const data = await getArticles();
-  const article = data.find(a => a.id === id);
+  allArticles = await getArticles();
+
+  const article = allArticles.find((a) => a.id === id);
 
   if (!article) {
     document.body.innerHTML = "<p>Article not found</p>";
     return;
   }
 
+  renderArticle(article);
+  renderRelated(article);
+}
+
+init();
+
+function renderArticle(article) {
   document.getElementById("title").textContent = article.title;
 
   document.getElementById("meta").innerHTML = `
     <span class="tag">${article.category}</span>
   `;
 
-  document.getElementById("content").innerHTML = article.content
-    .map(p => `<p>${p}</p>`)
-    .join("");
+  const content = document.getElementById("content");
+  content.innerHTML = "";
+
+  article.content.forEach((p) => {
+    const el = document.createElement("p");
+    el.textContent = p;
+    content.appendChild(el);
+  });
 
   document.getElementById("tags").innerHTML = (article.tags || [])
-    .map(t => `<span class="tag">${t}</span>`)
+    .map((t) => `<span class="tag">${t}</span>`)
     .join("");
+}
 
-  const related = data
-    .filter(a => a.category === article.category && a.id !== article.id)
+function renderRelated(article) {
+  const relatedEl = document.getElementById("related");
+  relatedEl.innerHTML = "";
+
+  const related = allArticles
+    .filter((a) => a.category === article.category && a.id !== article.id)
     .slice(0, 3);
 
-  const relatedEl = document.getElementById("related");
-
-  related.forEach(a => {
+  related.forEach((a) => {
     const div = document.createElement("div");
     div.className = "article";
+    div.dataset.id = a.id;
 
     const preview = Array.isArray(a.content)
       ? a.content.join(" ")
@@ -45,12 +64,12 @@ async function init() {
       <p>${preview.slice(0, 120)}...</p>
     `;
 
-    div.onclick = () => {
-      window.location.href = `article.html?id=${a.id}`;
-    };
-
     relatedEl.appendChild(div);
   });
-}
 
-init();
+  relatedEl.addEventListener("click", (e) => {
+    const card = e.target.closest(".article");
+    if (!card) return;
+    window.location.href = `article.html?id=${card.dataset.id}`;
+  });
+}
