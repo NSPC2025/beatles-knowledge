@@ -57,7 +57,7 @@ function renderRelated(article) {
 
     const preview = Array.isArray(a.content)
       ? a.content.join(" ")
-      : a.content;
+      : a.content || "";
 
     div.innerHTML = `
       <h3>${a.title}</h3>
@@ -66,10 +66,12 @@ function renderRelated(article) {
 
     relatedEl.appendChild(div);
   });
-
-  relatedEl.addEventListener("click", (e) => {
-    const card = e.target.closest(".article");
-    if (!card) return;
-    window.location.href = `article.html?id=${card.dataset.id}`;
-  });
 }
+
+/* ✅ FIX: attach listener ONCE */
+document.getElementById("related").addEventListener("click", (e) => {
+  const card = e.target.closest(".article");
+  if (!card) return;
+
+  window.location.href = `article.html?id=${card.dataset.id}`;
+});
