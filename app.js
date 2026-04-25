@@ -4,24 +4,33 @@ let articles = [];
 let currentFilter = "all";
 let searchQuery = "";
 
+/* ===== normalize ===== */
 function normalize(str = "") {
   return str.toLowerCase().trim();
 }
 
-function getPreview(article) {
-  return Array.isArray(article.content)
-    ? article.content.join(" ")
-    : article.content || "";
+/* ===== preprocess once (IMPORTANT) ===== */
+function prepareArticles(data) {
+  return data.map(a => ({
+    ...a,
+    _searchText: normalize(
+      a.title +
+      " " +
+      (Array.isArray(a.content) ? a.content.join(" ") : a.content || "") +
+      " " +
+      (a.tags || []).join(" ")
+    )
+  }));
 }
 
 /* ================= INIT ================= */
 
 async function init() {
-  articles = await getArticles();
+  const raw = await getArticles();
+  articles = prepareArticles(raw);
 
   buildFilters();
   attachEvents();
-
   applyFilters();
 }
 
@@ -35,7 +44,7 @@ function attachEvents() {
   searchInput.addEventListener("input", debounce((e) => {
     searchQuery = e.target.value;
     applyFilters();
-  }, 200));
+  }, 150));
 
   document.getElementById("articles").addEventListener("click", (e) => {
     const tag = e.target.closest(".clickable-tag");
@@ -88,12 +97,8 @@ function applyFilters() {
   const q = normalize(searchQuery);
 
   const filtered = articles.filter(article => {
-    const text = getPreview(article);
-
     const matchesSearch =
-      normalize(article.title).includes(q) ||
-      normalize(text).includes(q) ||
-      (article.tags || []).some(t => normalize(t).includes(q));
+      !q || article._searchText.includes(q);
 
     const matchesCategory =
       currentFilter === "all" ||
@@ -122,7 +127,9 @@ function render(list) {
     div.className = "article";
     div.dataset.id = article.id;
 
-    const preview = getPreview(article);
+    const preview = Array.isArray(article.content)
+      ? article.content.join(" ")
+      : article.content || "";
 
     const tagsHTML = (article.tags || [])
       .map(tag => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`)
