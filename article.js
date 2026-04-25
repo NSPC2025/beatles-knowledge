@@ -75,7 +75,10 @@ function renderRelated(article) {
 
       let score = 0;
 
-      if (a.category === article.category) score += 2;
+      const sharedCategories = a.category.filter(c =>
+  article.category.includes(c)
+);
+score += sharedCategories.length * 2;
 
       const sharedTags = (a.tags || []).filter(t =>
         (article.tags || []).includes(t)
