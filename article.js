@@ -94,7 +94,11 @@ function renderRelated(article) {
 
       let score = 0;
 
-      const sharedCategories = aCats.filter((c) => bCats.includes(c));
+      // 🔧 FIX: normalize category comparison (CRITICAL)
+      const sharedCategories = aCats
+        .map(normalize)
+        .filter((c) => bCats.map(normalize).includes(c));
+
       score += sharedCategories.length * 3;
 
       const sharedTags = aTags.filter((t) => bTags.includes(t));
@@ -161,4 +165,8 @@ function attachTagClick() {
 
 function capitalize(str = "") {
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function normalize(str = "") {
+  return str.toLowerCase().trim();
 }
