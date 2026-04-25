@@ -55,7 +55,7 @@ body {
   color: var(--text);
 }
 
-/* ===== Header / Hero ===== */
+/* ===== Hero ===== */
 header {
   background: linear-gradient(135deg, #4f46e5, #1a73e8);
   color: white;
@@ -118,6 +118,22 @@ input:focus {
   border-color: var(--primary);
 }
 
+/* ===== ACTIVE FILTERS (NEW) ===== */
+.active-filters {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.active-filter {
+  background: #111827;
+  color: white;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
 /* ===== Grid ===== */
 .grid {
   display: grid;
@@ -169,7 +185,7 @@ input:focus {
   margin-top: 5px;
 }
 
-/* ===== NEW: clickable tags ===== */
+/* clickable tags */
 .clickable-tag {
   cursor: pointer;
   transition: all 0.15s ease;
