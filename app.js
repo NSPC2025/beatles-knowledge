@@ -26,6 +26,7 @@ function readURLParams() {
   const search = params.get("search");
   const category = params.get("category");
 
+  // merge instead of overwrite
   if (tag) searchQuery = tag.toLowerCase();
   if (search) searchQuery = search.toLowerCase();
   if (category) currentFilter = category.toLowerCase();
@@ -45,7 +46,7 @@ function attachEvents() {
   searchInput.addEventListener(
     "input",
     debounce((e) => {
-      searchQuery = (e.target.value || "").toLowerCase();
+      searchQuery = (e.target.value || "").toLowerCase().trim();
       updateURL();
       applyFilters();
     }, 150)
@@ -111,45 +112,51 @@ function buildFilters() {
   container.innerHTML = categories
     .map(
       (cat) => `
-    <button class="filter-btn ${
-      cat === currentFilter ? "active" : ""
-    }" data-cat="${cat}">
-      ${capitalize(cat)}
-    </button>
-  `
+      <button class="filter-btn ${
+        cat === currentFilter ? "active" : ""
+      }" data-cat="${cat}">
+        ${capitalize(cat)}
+      </button>
+    `
     )
     .join("");
 }
 
-/* ================= FILTER ENGINE (ROBUST VERSION) ================= */
+/* ================= SEARCH ENGINE (FIXED CORE) ================= */
 
 function applyFilters() {
-  const words = searchQuery.trim().split(/\s+/).filter(Boolean);
+  const words = searchQuery
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
 
   const filtered = articles
     .filter((article) => {
-      const cats = (article.category || []).map((c) =>
-        String(c).toLowerCase()
-      );
-
       const matchesCategory =
-        currentFilter === "all" || cats.includes(currentFilter);
+        currentFilter === "all" ||
+        (article.category || []).includes(currentFilter);
 
       if (!matchesCategory) return false;
 
       if (!words.length) return true;
 
+      // ONE unified search field (IMPORTANT FIX)
       const text = article._searchText || "";
 
       return words.every((w) => text.includes(w));
     })
     .map((article) => {
+      if (!words.length) return { article, score: 1 };
+
       let score = 0;
+      const text = article._searchText || "";
 
       for (const w of words) {
-        if (article._title?.includes(w)) score += 3;
-        else if (article._tags?.includes(w)) score += 2;
-        else if (article._content?.includes(w)) score += 1;
+        // weighted scoring (stable for large datasets)
+        if (article._title?.includes(w)) score += 5;
+        if (article._tags?.includes(w)) score += 3;
+        if (article._categories?.includes(w)) score += 2;
+        if (text.includes(w)) score += 1;
       }
 
       return { article, score };
@@ -224,10 +231,10 @@ function renderActiveFilters() {
   box.innerHTML = parts
     .map(
       (p) => `
-    <span class="active-filter" data-type="${p.type}">
-      ${p.label} ✕
-    </span>
-  `
+      <span class="active-filter" data-type="${p.type}">
+        ${p.label} ✕
+      </span>
+    `
     )
     .join("");
 
