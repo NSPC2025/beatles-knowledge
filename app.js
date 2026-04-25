@@ -2,6 +2,7 @@ import { getArticles } from "./dataLoader.js";
 
 let articles = [];
 let currentFilter = "all";
+let searchQuery = "";
 
 function normalize(str = "") {
   return str.toLowerCase().trim();
@@ -13,40 +14,52 @@ function getPreview(article) {
     : article.content || "";
 }
 
+/* ================= INIT ================= */
+
 async function init() {
   articles = await getArticles();
+
   buildFilters();
-  render(articles);
-  renderActiveFilters();
+  attachEvents();
+
+  applyFilters();
 }
 
 init();
 
-/* ================= FILTERS ================= */
+/* ================= EVENTS ================= */
 
-function buildFilters() {
-  const container = document.getElementById("filters");
+function attachEvents() {
+  const searchInput = document.getElementById("search");
 
-  const categories = ["all", ...new Set(articles.map(a => a.category))];
+  searchInput.addEventListener("input", debounce((e) => {
+    searchQuery = e.target.value;
+    applyFilters();
+  }, 200));
 
-  container.innerHTML = categories
-    .map(
-      cat => `
-      <button class="filter-btn ${cat === "all" ? "active" : ""}" data-cat="${cat}">
-        ${cat}
-      </button>
-    `
-    )
-    .join("");
+  document.getElementById("articles").addEventListener("click", (e) => {
+    const tag = e.target.closest(".clickable-tag");
 
-  container.addEventListener("click", (e) => {
+    if (tag) {
+      searchQuery = tag.dataset.tag;
+      document.getElementById("search").value = searchQuery;
+      applyFilters();
+      return;
+    }
+
+    const card = e.target.closest(".article");
+    if (card) {
+      window.location.href = `article.html?id=${card.dataset.id}`;
+    }
+  });
+
+  document.getElementById("filters").addEventListener("click", (e) => {
     const btn = e.target.closest(".filter-btn");
     if (!btn) return;
 
     currentFilter = btn.dataset.cat;
 
-    document
-      .querySelectorAll(".filter-btn")
+    document.querySelectorAll(".filter-btn")
       .forEach(b => b.classList.remove("active"));
 
     btn.classList.add("active");
@@ -55,22 +68,36 @@ function buildFilters() {
   });
 }
 
-/* ================= FILTER LOGIC ================= */
+/* ================= FILTERS ================= */
+
+function buildFilters() {
+  const container = document.getElementById("filters");
+
+  const categories = ["all", ...new Set(articles.map(a => a.category))];
+
+  container.innerHTML = categories.map(cat => `
+    <button class="filter-btn ${cat === "all" ? "active" : ""}" data-cat="${cat}">
+      ${cat}
+    </button>
+  `).join("");
+}
+
+/* ================= FILTER ENGINE ================= */
 
 function applyFilters() {
-  const q = normalize(document.getElementById("search").value);
+  const q = normalize(searchQuery);
 
-  const filtered = articles.filter((a) => {
-    const text = getPreview(a);
+  const filtered = articles.filter(article => {
+    const text = getPreview(article);
 
     const matchesSearch =
-      normalize(a.title).includes(q) ||
+      normalize(article.title).includes(q) ||
       normalize(text).includes(q) ||
-      (a.tags || []).some((t) => normalize(t).includes(q));
+      (article.tags || []).some(t => normalize(t).includes(q));
 
     const matchesCategory =
       currentFilter === "all" ||
-      normalize(a.category) === normalize(currentFilter);
+      article.category === currentFilter;
 
     return matchesSearch && matchesCategory;
   });
@@ -79,28 +106,7 @@ function applyFilters() {
   renderActiveFilters();
 }
 
-/* ================= ACTIVE FILTER UI ================= */
-
-function renderActiveFilters() {
-  const box = document.getElementById("activeFilters");
-  const search = document.getElementById("search").value;
-
-  const parts = [];
-
-  if (currentFilter !== "all") {
-    parts.push(`Category: ${currentFilter}`);
-  }
-
-  if (search.trim()) {
-    parts.push(`Search: "${search}"`);
-  }
-
-  box.innerHTML = parts
-    .map((p) => `<span class="active-filter">${p}</span>`)
-    .join("");
-}
-
-/* ================= RENDER ================= */
+/* ================= UI ================= */
 
 function render(list) {
   const container = document.getElementById("articles");
@@ -111,23 +117,20 @@ function render(list) {
     return;
   }
 
-  list.forEach((a) => {
+  list.forEach(article => {
     const div = document.createElement("div");
     div.className = "article";
-    div.dataset.id = a.id;
+    div.dataset.id = article.id;
 
-    const previewText = getPreview(a);
+    const preview = getPreview(article);
 
-    const tagsHTML = (a.tags || [])
-      .map(
-        (tag) =>
-          `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`
-      )
+    const tagsHTML = (article.tags || [])
+      .map(tag => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`)
       .join("");
 
     div.innerHTML = `
-      <h3>${a.title}</h3>
-      <p>${previewText.slice(0, 180)}...</p>
+      <h3>${article.title}</h3>
+      <p>${preview.slice(0, 180)}...</p>
       <div class="tags">${tagsHTML}</div>
     `;
 
@@ -135,22 +138,30 @@ function render(list) {
   });
 }
 
-/* ================= EVENTS ================= */
+function renderActiveFilters() {
+  const box = document.getElementById("activeFilters");
 
-document.getElementById("search").addEventListener("input", applyFilters);
+  const parts = [];
 
-/* single delegated handler */
-document.getElementById("articles").addEventListener("click", (e) => {
-  const tag = e.target.closest(".clickable-tag");
-
-  if (tag) {
-    document.getElementById("search").value = tag.dataset.tag;
-    applyFilters();
-    return;
+  if (currentFilter !== "all") {
+    parts.push(`Category: ${currentFilter}`);
   }
 
-  const card = e.target.closest(".article");
-  if (card) {
-    window.location.href = `article.html?id=${card.dataset.id}`;
+  if (searchQuery.trim()) {
+    parts.push(`Search: "${searchQuery}"`);
   }
-});
+
+  box.innerHTML = parts
+    .map(p => `<span class="active-filter">${p}</span>`)
+    .join("");
+}
+
+/* ================= UTIL ================= */
+
+function debounce(fn, delay) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
+}
