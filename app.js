@@ -8,6 +8,7 @@ fetch('data/articles.json')
     articles = data;
     buildFilters();
     render(articles);
+    renderActiveFilters();
   });
 
 // Build category filters
@@ -55,12 +56,38 @@ function applyFilters() {
   });
 
   render(filtered);
+  renderActiveFilters();
+}
+
+// Render active filters UI
+function renderActiveFilters() {
+  const box = document.getElementById("activeFilters");
+  const search = document.getElementById("search").value;
+
+  const parts = [];
+
+  if (currentFilter !== "all") {
+    parts.push(`Category: ${currentFilter}`);
+  }
+
+  if (search.trim()) {
+    parts.push(`Search: "${search}"`);
+  }
+
+  box.innerHTML = parts
+    .map(p => `<span class="active-filter">${p}</span>`)
+    .join("");
 }
 
 // Render articles
 function render(list) {
   const container = document.getElementById("articles");
   container.innerHTML = "";
+
+  if (list.length === 0) {
+    container.innerHTML = "<p>No articles found.</p>";
+    return;
+  }
 
   list.forEach(a => {
     const div = document.createElement("div");
@@ -89,10 +116,10 @@ function render(list) {
 
     container.appendChild(div);
 
-    // Tag click handling (IMPORTANT: after append)
+    // Tag click handling
     div.querySelectorAll(".clickable-tag").forEach(tagEl => {
       tagEl.onclick = (e) => {
-        e.stopPropagation(); // prevent opening article
+        e.stopPropagation();
 
         const tag = tagEl.dataset.tag.toLowerCase();
 
