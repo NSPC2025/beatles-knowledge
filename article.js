@@ -41,7 +41,7 @@ function renderArticle(article) {
   title.textContent = article.title || "Untitled";
 
   meta.innerHTML = `
-    <span class="tag">${article.category || "uncategorized"}</span>
+    <span class="tag">${capitalize(article.category)}</span>
   `;
 
   content.innerHTML = "";
@@ -70,14 +70,25 @@ function renderRelated(article) {
   relatedEl.innerHTML = "";
 
   const related = allArticles
-    .filter(a =>
-      a.id !== article.id &&
-      (
-        a.category === article.category ||
-        (a.tags || []).some(t => (article.tags || []).includes(t))
-      )
-    )
-    .slice(0, 4);
+    .map(a => {
+      if (a.id === article.id) return null;
+
+      let score = 0;
+
+      if (a.category === article.category) score += 2;
+
+      const sharedTags = (a.tags || []).filter(t =>
+        (article.tags || []).includes(t)
+      );
+
+      score += sharedTags.length * 2;
+
+      return score > 0 ? { a, score } : null;
+    })
+    .filter(Boolean)
+    .sort((x, y) => y.score - x.score)
+    .slice(0, 4)
+    .map(x => x.a);
 
   if (!related.length) {
     relatedEl.innerHTML = "<p>No related articles.</p>";
@@ -89,9 +100,7 @@ function renderRelated(article) {
     div.className = "article";
     div.dataset.id = a.id;
 
-    const preview = Array.isArray(a.content)
-      ? a.content.join(" ")
-      : a.content || "";
+    const preview = a._content || "";
 
     div.innerHTML = `
       <h3>${a.title}</h3>
@@ -116,7 +125,6 @@ function attachRelatedClick() {
   });
 }
 
-/* NEW: tag click support */
 function attachTagClick() {
   const tags = document.getElementById("tags");
   if (!tags) return;
@@ -128,4 +136,10 @@ function attachTagClick() {
     const value = tag.dataset.tag;
     window.location.href = `index.html?tag=${encodeURIComponent(value)}`;
   });
+}
+
+/* ================= UTIL ================= */
+
+function capitalize(str = "") {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
