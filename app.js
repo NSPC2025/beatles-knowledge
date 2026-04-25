@@ -121,10 +121,10 @@ function buildFilters() {
     .join("");
 }
 
-/* ================= FILTER ENGINE ================= */
+/* ================= FILTER ENGINE (SAFE VERSION) ================= */
 
 function applyFilters() {
-  const words = searchQuery.split(/\s+/).filter(Boolean);
+  const words = searchQuery.trim().split(/\s+/).filter(Boolean);
 
   const filtered = articles
     .filter((article) => {
@@ -137,15 +137,17 @@ function applyFilters() {
 
       if (!words.length) return true;
 
-      return words.every((w) => article._searchText.includes(w));
+      const text = article._searchText || "";
+
+      return words.every((w) => text.includes(w));
     })
     .map((article) => {
       let score = 0;
 
       for (const w of words) {
-        if (article._title.includes(w)) score += 3;
-        else if (article._tags.includes(w)) score += 2;
-        else if (article._content.includes(w)) score += 1;
+        if (article._title?.includes(w)) score += 3;
+        else if (article._tags?.includes(w)) score += 2;
+        else if (article._content?.includes(w)) score += 1;
       }
 
       return { article, score };
