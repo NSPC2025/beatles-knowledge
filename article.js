@@ -28,13 +28,19 @@ async function init() {
 init();
 
 function renderArticle(article) {
-  document.getElementById("title").textContent = article.title;
+  const title = document.getElementById("title");
+  const meta = document.getElementById("meta");
+  const content = document.getElementById("content");
+  const tags = document.getElementById("tags");
 
-  document.getElementById("meta").innerHTML = `
+  if (!title || !meta || !content || !tags) return;
+
+  title.textContent = article.title || "Untitled";
+
+  meta.innerHTML = `
     <span class="tag">${article.category || "uncategorized"}</span>
   `;
 
-  const content = document.getElementById("content");
   content.innerHTML = "";
 
   const paragraphs = Array.isArray(article.content)
@@ -47,13 +53,15 @@ function renderArticle(article) {
     content.appendChild(el);
   });
 
-  document.getElementById("tags").innerHTML = (article.tags || [])
+  tags.innerHTML = (article.tags || [])
     .map(t => `<span class="tag">${t}</span>`)
     .join("");
 }
 
 function renderRelated(article) {
   const relatedEl = document.getElementById("related");
+  if (!relatedEl) return;
+
   relatedEl.innerHTML = "";
 
   const related = allArticles
@@ -90,7 +98,10 @@ function renderRelated(article) {
 }
 
 function attachRelatedClick() {
-  document.getElementById("related").addEventListener("click", (e) => {
+  const relatedEl = document.getElementById("related");
+  if (!relatedEl) return;
+
+  relatedEl.addEventListener("click", (e) => {
     const card = e.target.closest(".article");
     if (!card) return;
 
