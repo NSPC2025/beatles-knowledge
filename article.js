@@ -53,9 +53,7 @@ function renderArticle(article) {
 
   const mainCategory = article.category?.[0] || "uncategorized";
 
-  meta.innerHTML = `
-    <span class="tag">${capitalize(mainCategory)}</span>
-  `;
+  meta.innerHTML = `<span class="tag">${capitalize(mainCategory)}</span>`;
 
   content.innerHTML = "";
 
@@ -77,7 +75,7 @@ function renderArticle(article) {
     .join("");
 }
 
-/* ================= RELATED (FIXED PREVIEW) ================= */
+/* ================= RELATED ================= */
 
 function renderRelated(article) {
   const relatedEl = document.getElementById("related");
@@ -89,16 +87,17 @@ function renderRelated(article) {
     .map((a) => {
       if (a.id === article.id) return null;
 
+      const aCats = a.category || [];
+      const aTags = a.tags || [];
+      const bCats = article.category || [];
+      const bTags = article.tags || [];
+
       let score = 0;
 
-      const sharedCategories = a.category.filter((c) =>
-        article.category.includes(c)
-      );
+      const sharedCategories = aCats.filter((c) => bCats.includes(c));
       score += sharedCategories.length * 3;
 
-      const sharedTags = (a.tags || []).filter((t) =>
-        (article.tags || []).includes(t)
-      );
+      const sharedTags = aTags.filter((t) => bTags.includes(t));
       score += sharedTags.length * 2;
 
       return score > 0 ? { a, score } : null;
@@ -118,7 +117,9 @@ function renderRelated(article) {
     div.className = "article";
     div.dataset.id = a.id;
 
-    const preview = (a.content || []).join(" ");
+    const preview = Array.isArray(a.content)
+      ? a.content.join(" ")
+      : a.content || "";
 
     div.innerHTML = `
       <h3>${a.title}</h3>
