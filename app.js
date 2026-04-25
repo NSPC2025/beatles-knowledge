@@ -100,9 +100,9 @@ function buildFilters() {
   if (!container) return;
 
   const categories = [
-  "all",
-  ...new Set(articles.flatMap(a => a.category))
-];
+    "all",
+    ...new Set(articles.flatMap(a => a.category))
+  ];
 
   container.innerHTML = categories.map(cat => `
     <button class="filter-btn ${cat === currentFilter ? "active" : ""}" data-cat="${cat}">
@@ -125,10 +125,9 @@ function applyFilters() {
 
       for (const w of words) {
         if (!article._searchText.includes(w)) {
-          return null; // require ALL words to match
+          return null;
         }
 
-        // scoring boost
         if (article._title.includes(w)) score += 3;
         else if (article._tags.includes(w)) score += 2;
         else score += 1;
@@ -168,6 +167,8 @@ function render(list) {
 
     const preview = article._content;
 
+    const mainCategory = article.category[0] || "uncategorized";
+
     const tagsHTML = (article.tags || [])
       .map(tag => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`)
       .join("");
@@ -176,7 +177,7 @@ function render(list) {
       <h3>${article.title}</h3>
       <p>${preview.slice(0, 180)}...</p>
       <div class="tags">
-        <span class="tag">${capitalize(article.category)}</span>
+        <span class="tag">${capitalize(mainCategory)}</span>
         ${tagsHTML}
       </div>
     `;
@@ -211,10 +212,7 @@ function renderActiveFilters() {
     el.addEventListener("click", () => {
       const type = el.dataset.type;
 
-      if (type === "category") {
-        currentFilter = "all";
-      }
-
+      if (type === "category") currentFilter = "all";
       if (type === "search") {
         searchQuery = "";
         const input = document.getElementById("search");
