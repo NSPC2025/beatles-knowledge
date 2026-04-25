@@ -40,8 +40,10 @@ function renderArticle(article) {
 
   title.textContent = article.title || "Untitled";
 
+  const mainCategory = article.category[0] || "uncategorized";
+
   meta.innerHTML = `
-    <span class="tag">${capitalize(article.category)}</span>
+    <span class="tag">${capitalize(mainCategory)}</span>
   `;
 
   content.innerHTML = "";
@@ -75,15 +77,16 @@ function renderRelated(article) {
 
       let score = 0;
 
+      // category overlap
       const sharedCategories = a.category.filter(c =>
-  article.category.includes(c)
-);
-score += sharedCategories.length * 2;
+        article.category.includes(c)
+      );
+      score += sharedCategories.length * 3;
 
+      // tag overlap
       const sharedTags = (a.tags || []).filter(t =>
         (article.tags || []).includes(t)
       );
-
       score += sharedTags.length * 2;
 
       return score > 0 ? { a, score } : null;
