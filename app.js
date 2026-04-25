@@ -9,18 +9,29 @@ function normalize(str = "") {
   return str.toLowerCase().trim();
 }
 
-/* ===== preprocess once ===== */
+/* ===== preprocess ===== */
 function prepareArticles(data) {
-  return data.map(a => ({
-    ...a,
-    _searchText: normalize(
-      (a.title || "") +
-      " " +
-      (Array.isArray(a.content) ? a.content.join(" ") : a.content || "") +
-      " " +
-      (a.tags || []).join(" ")
-    )
-  }));
+  return data.map(a => {
+    const contentText = Array.isArray(a.content)
+      ? a.content.join(" ")
+      : a.content || "";
+
+    const tags = (a.tags || []).map(t => normalize(t));
+    const category = normalize(a.category || "uncategorized");
+
+    return {
+      ...a,
+      category,
+      tags,
+
+      _title: normalize(a.title || ""),
+      _content: normalize(contentText),
+      _tags: tags.join(" "),
+      _searchText: normalize(
+        (a.title || "") + " " + contentText + " " + tags.join(" ")
+      )
+    };
+  });
 }
 
 /* ================= INIT ================= */
@@ -29,7 +40,7 @@ async function init() {
   const raw = await getArticles();
   articles = prepareArticles(raw);
 
-  readURLParams();   // ✅ NEW
+  readURLParams();
   buildFilters();
   attachEvents();
   applyFilters();
@@ -43,9 +54,12 @@ function readURLParams() {
   const params = new URLSearchParams(window.location.search);
 
   const tag = params.get("tag");
-  if (tag) {
-    searchQuery = tag;
-  }
+  const search = params.get("search");
+  const category = params.get("category");
+
+  if (tag) searchQuery = tag;
+  if (search) searchQuery = search;
+  if (category) currentFilter = normalize(category);
 }
 
 /* ================= EVENTS ================= */
@@ -57,10 +71,11 @@ function attachEvents() {
 
   if (!searchInput || !articlesEl || !filtersEl) return;
 
-  searchInput.value = searchQuery; // sync UI
+  searchInput.value = searchQuery;
 
   searchInput.addEventListener("input", debounce((e) => {
     searchQuery = e.target.value || "";
+    updateURL();
     applyFilters();
   }, 150));
 
@@ -70,6 +85,7 @@ function attachEvents() {
     if (tag) {
       searchQuery = tag.dataset.tag || "";
       searchInput.value = searchQuery;
+      updateURL();
       applyFilters();
       return;
     }
@@ -91,8 +107,21 @@ function attachEvents() {
 
     btn.classList.add("active");
 
+    updateURL();
     applyFilters();
   });
+}
+
+/* ================= URL UPDATE ================= */
+
+function updateURL() {
+  const params = new URLSearchParams();
+
+  if (searchQuery) params.set("search", searchQuery);
+  if (currentFilter !== "all") params.set("category", currentFilter);
+
+  const newURL = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState(null, "", newURL);
 }
 
 /* ================= FILTER BUTTONS ================= */
@@ -104,7 +133,7 @@ function buildFilters() {
   const categories = ["all", ...new Set(articles.map(a => a.category))];
 
   container.innerHTML = categories.map(cat => `
-    <button class="filter-btn ${cat === "all" ? "active" : ""}" data-cat="${cat}">
+    <button class="filter-btn ${cat === currentFilter ? "active" : ""}" data-cat="${cat}">
       ${cat}
     </button>
   `).join("");
@@ -113,18 +142,35 @@ function buildFilters() {
 /* ================= FILTER ENGINE ================= */
 
 function applyFilters() {
-  const q = normalize(searchQuery);
+  const words = normalize(searchQuery).split(/\s+/).filter(Boolean);
 
-  const filtered = articles.filter(article => {
-    const matchesSearch =
-      !q || article._searchText.includes(q);
+  const filtered = articles
+    .map(article => {
+      let score = 0;
 
-    const matchesCategory =
-      currentFilter === "all" ||
-      article.category === currentFilter;
+      const matchesSearch = words.every(w => {
+        const inTitle = article._title.includes(w);
+        const inTags = article._tags.includes(w);
+        const inContent = article._content.includes(w);
 
-    return matchesSearch && matchesCategory;
-  });
+        if (inTitle) score += 3;
+        if (inTags) score += 2;
+        if (inContent) score += 1;
+
+        return inTitle || inTags || inContent;
+      });
+
+      const matchesCategory =
+        currentFilter === "all" ||
+        article.category === currentFilter;
+
+      return (matchesSearch && matchesCategory)
+        ? { article, score }
+        : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.article);
 
   render(filtered);
   renderActiveFilters();
@@ -148,9 +194,7 @@ function render(list) {
     div.className = "article";
     div.dataset.id = article.id;
 
-    const preview = Array.isArray(article.content)
-      ? article.content.join(" ")
-      : article.content || "";
+    const preview = article._content;
 
     const tagsHTML = (article.tags || [])
       .map(tag => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`)
@@ -194,12 +238,6 @@ function renderActiveFilters() {
 
       if (type === "category") {
         currentFilter = "all";
-
-        document.querySelectorAll(".filter-btn")
-          .forEach(b => b.classList.remove("active"));
-
-        const allBtn = document.querySelector('[data-cat="all"]');
-        if (allBtn) allBtn.classList.add("active");
       }
 
       if (type === "search") {
@@ -208,6 +246,7 @@ function renderActiveFilters() {
         if (input) input.value = "";
       }
 
+      updateURL();
       applyFilters();
     });
   });
