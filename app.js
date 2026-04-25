@@ -42,11 +42,14 @@ function attachEvents() {
 
   searchInput.value = searchQuery;
 
-  searchInput.addEventListener("input", debounce((e) => {
-    searchQuery = (e.target.value || "").toLowerCase();
-    updateURL();
-    applyFilters();
-  }, 150));
+  searchInput.addEventListener(
+    "input",
+    debounce((e) => {
+      searchQuery = (e.target.value || "").toLowerCase();
+      updateURL();
+      applyFilters();
+    }, 150)
+  );
 
   articlesEl.addEventListener("click", (e) => {
     const tag = e.target.closest(".clickable-tag");
@@ -71,8 +74,9 @@ function attachEvents() {
 
     currentFilter = (btn.dataset.cat || "all").toLowerCase();
 
-    document.querySelectorAll(".filter-btn")
-      .forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".filter-btn").forEach((b) =>
+      b.classList.remove("active")
+    );
 
     btn.classList.add("active");
 
@@ -101,45 +105,56 @@ function buildFilters() {
 
   const categories = [
     "all",
-    ...new Set(articles.flatMap(a => a.category))
+    ...new Set(articles.flatMap((a) => a.category)),
   ];
 
-  container.innerHTML = categories.map(cat => `
-    <button class="filter-btn ${cat === currentFilter ? "active" : ""}" data-cat="${cat}">
+  container.innerHTML = categories
+    .map(
+      (cat) => `
+    <button class="filter-btn ${
+      cat === currentFilter ? "active" : ""
+    }" data-cat="${cat}">
       ${capitalize(cat)}
     </button>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
-/* ================= FILTER ENGINE ================= */
+/* ================= FILTER ENGINE (FIXED) ================= */
 
 function applyFilters() {
-  const words = searchQuery
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean);
+  const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
 
   const filtered = articles
-    .map(article => {
+    .filter((article) => {
+      // category FIRST (performance + correctness)
+      const matchesCategory =
+        currentFilter === "all" ||
+        article.category.includes(currentFilter);
+
+      if (!matchesCategory) return false;
+
+      // if no search → include
+      if (!words.length) return true;
+
+      // search match
+      return words.every((w) => article._searchText.includes(w));
+    })
+    .map((article) => {
+      // scoring AFTER filtering
       let score = 0;
 
       for (const w of words) {
-        if (!article._searchText.includes(w)) return null;
-
         if (article._title.includes(w)) score += 3;
         else if (article._tags.includes(w)) score += 2;
-        else score += 1;
+        else if (article._content.includes(w)) score += 1;
       }
 
-      const matchesCategory =
-        currentFilter === "all" ||
-        article.category.some(c => c === currentFilter);
-
-      return matchesCategory ? { article, score } : null;
+      return { article, score };
     })
-    .filter(Boolean)
     .sort((a, b) => b.score - a.score)
-    .map(x => x.article);
+    .map((x) => x.article);
 
   render(filtered);
   renderActiveFilters();
@@ -158,7 +173,7 @@ function render(list) {
     return;
   }
 
-  list.forEach(article => {
+  list.forEach((article) => {
     const div = document.createElement("div");
     div.className = "article";
     div.dataset.id = article.id;
@@ -167,7 +182,10 @@ function render(list) {
     const mainCategory = article.category[0] || "uncategorized";
 
     const tagsHTML = (article.tags || [])
-      .map(tag => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`)
+      .map(
+        (tag) =>
+          `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`
+      )
       .join("");
 
     div.innerHTML = `
@@ -192,24 +210,32 @@ function renderActiveFilters() {
   const parts = [];
 
   if (currentFilter !== "all") {
-    parts.push({ label: `Category: ${capitalize(currentFilter)}`, type: "category" });
+    parts.push({
+      label: `Category: ${capitalize(currentFilter)}`,
+      type: "category",
+    });
   }
 
   if (searchQuery.trim()) {
     parts.push({ label: `Search: "${searchQuery}"`, type: "search" });
   }
 
-  box.innerHTML = parts.map(p => `
+  box.innerHTML = parts
+    .map(
+      (p) => `
     <span class="active-filter" data-type="${p.type}">
       ${p.label} ✕
     </span>
-  `).join("");
+  `
+    )
+    .join("");
 
-  box.querySelectorAll(".active-filter").forEach(el => {
+  box.querySelectorAll(".active-filter").forEach((el) => {
     el.addEventListener("click", () => {
       const type = el.dataset.type;
 
       if (type === "category") currentFilter = "all";
+
       if (type === "search") {
         searchQuery = "";
         const input = document.getElementById("search");
