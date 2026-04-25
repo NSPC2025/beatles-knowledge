@@ -14,15 +14,18 @@ function prepareArticles(data) {
 
     const tags = (a.tags || []).map(t => normalize(t));
 
-    const categories = Array.isArray(a.category)
-      ? a.category.map(c => normalize(c))
-      : [normalize(a.category || "uncategorized")];
+    // 🔧 FIX: always force clean normalized array
+    const categories = (Array.isArray(a.category) ? a.category : [a.category || "uncategorized"])
+      .map(c => normalize(c || "uncategorized"));
 
     return {
       ...a,
+
+      // normalized public fields
       category: categories,
       tags,
 
+      // private search fields
       _title: normalize(a.title || ""),
       _content: normalize(contentText),
       _tags: tags.join(" "),
