@@ -6,7 +6,10 @@ fetch("data/articles.json")
   .then(data => {
     const article = data.find(a => a.id == id);
 
-    if (!article) return;
+    if (!article) {
+  document.body.innerHTML = "<p>Article not found</p>";
+  return;
+}
 
     document.getElementById("title").textContent = article.title;
     document.getElementById("content").innerHTML = article.content
