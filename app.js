@@ -69,7 +69,8 @@ function applyFilters() {
       (a.tags || []).some((t) => normalize(t).includes(q));
 
     const matchesCategory =
-      currentFilter === "all" || a.category === currentFilter;
+      currentFilter === "all" ||
+      normalize(a.category) === normalize(currentFilter);
 
     return matchesSearch && matchesCategory;
   });
