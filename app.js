@@ -121,24 +121,14 @@ function applyFilters() {
       let score = 0;
 
       for (const w of words) {
-        let matched = false;
-
-        if (article._title.includes(w)) {
-          score += 3;
-          matched = true;
+        if (!article._searchText.includes(w)) {
+          return null; // require ALL words to match
         }
 
-        if (article._tags.includes(w)) {
-          score += 2;
-          matched = true;
-        }
-
-        if (article._content.includes(w)) {
-          score += 1;
-          matched = true;
-        }
-
-        if (!matched) return null;
+        // scoring boost
+        if (article._title.includes(w)) score += 3;
+        else if (article._tags.includes(w)) score += 2;
+        else score += 1;
       }
 
       const matchesCategory =
