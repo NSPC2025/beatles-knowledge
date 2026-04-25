@@ -25,6 +25,36 @@ body {
   padding: 0 20px;
 }
 
+/* ===== Navbar ===== */
+.navbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-weight: 600;
+}
+
+.nav-links span {
+  margin-left: 20px;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.nav-links span:hover {
+  color: var(--text);
+}
+
 /* ===== Header / Hero ===== */
 header {
   background: linear-gradient(135deg, #4f46e5, #1a73e8);
@@ -139,16 +169,30 @@ input:focus {
   margin-top: 5px;
 }
 
-/* ===== Article Page ===== */
-h1 {
-  font-size: 32px;
+/* ===== Article Page (UPDATED) ===== */
+
+.article-page {
+  max-width: 800px;
+}
+
+.article-header {
   margin-bottom: 20px;
 }
 
-.container p {
+#meta {
+  margin-top: 10px;
+}
+
+.article-content p {
   font-size: 18px;
   line-height: 1.8;
-  max-width: 750px;
+  margin-bottom: 20px;
+}
+
+hr {
+  margin: 40px 0;
+  border: none;
+  border-top: 1px solid var(--border);
 }
 
 /* Back link */
