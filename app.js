@@ -4,41 +4,10 @@ let articles = [];
 let currentFilter = "all";
 let searchQuery = "";
 
-/* ===== normalize ===== */
-function normalize(str = "") {
-  return str.toLowerCase().trim();
-}
-
-/* ===== preprocess ===== */
-function prepareArticles(data) {
-  return data.map(a => {
-    const contentText = Array.isArray(a.content)
-      ? a.content.join(" ")
-      : a.content || "";
-
-    const tags = (a.tags || []).map(t => normalize(t));
-    const category = normalize(a.category || "uncategorized");
-
-    return {
-      ...a,
-      category,
-      tags,
-
-      _title: normalize(a.title || ""),
-      _content: normalize(contentText),
-      _tags: tags.join(" "),
-      _searchText: normalize(
-        (a.title || "") + " " + contentText + " " + tags.join(" ")
-      )
-    };
-  });
-}
-
 /* ================= INIT ================= */
 
 async function init() {
-  const raw = await getArticles();
-  articles = prepareArticles(raw);
+  articles = await getArticles();
 
   readURLParams();
   buildFilters();
@@ -59,7 +28,7 @@ function readURLParams() {
 
   if (tag) searchQuery = tag;
   if (search) searchQuery = search;
-  if (category) currentFilter = normalize(category);
+  if (category) currentFilter = category.toLowerCase();
 }
 
 /* ================= EVENTS ================= */
@@ -134,7 +103,7 @@ function buildFilters() {
 
   container.innerHTML = categories.map(cat => `
     <button class="filter-btn ${cat === currentFilter ? "active" : ""}" data-cat="${cat}">
-      ${cat}
+      ${capitalize(cat)}
     </button>
   `).join("");
 }
@@ -142,31 +111,41 @@ function buildFilters() {
 /* ================= FILTER ENGINE ================= */
 
 function applyFilters() {
-  const words = normalize(searchQuery).split(/\s+/).filter(Boolean);
+  const words = searchQuery
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
 
   const filtered = articles
     .map(article => {
       let score = 0;
 
-      const matchesSearch = words.every(w => {
-        const inTitle = article._title.includes(w);
-        const inTags = article._tags.includes(w);
-        const inContent = article._content.includes(w);
+      for (const w of words) {
+        let matched = false;
 
-        if (inTitle) score += 3;
-        if (inTags) score += 2;
-        if (inContent) score += 1;
+        if (article._title.includes(w)) {
+          score += 3;
+          matched = true;
+        }
 
-        return inTitle || inTags || inContent;
-      });
+        if (article._tags.includes(w)) {
+          score += 2;
+          matched = true;
+        }
+
+        if (article._content.includes(w)) {
+          score += 1;
+          matched = true;
+        }
+
+        if (!matched) return null;
+      }
 
       const matchesCategory =
         currentFilter === "all" ||
         article.category === currentFilter;
 
-      return (matchesSearch && matchesCategory)
-        ? { article, score }
-        : null;
+      return matchesCategory ? { article, score } : null;
     })
     .filter(Boolean)
     .sort((a, b) => b.score - a.score)
@@ -203,7 +182,10 @@ function render(list) {
     div.innerHTML = `
       <h3>${article.title}</h3>
       <p>${preview.slice(0, 180)}...</p>
-      <div class="tags">${tagsHTML}</div>
+      <div class="tags">
+        <span class="tag">${capitalize(article.category)}</span>
+        ${tagsHTML}
+      </div>
     `;
 
     container.appendChild(div);
@@ -219,7 +201,7 @@ function renderActiveFilters() {
   const parts = [];
 
   if (currentFilter !== "all") {
-    parts.push({ label: `Category: ${currentFilter}`, type: "category" });
+    parts.push({ label: `Category: ${capitalize(currentFilter)}`, type: "category" });
   }
 
   if (searchQuery.trim()) {
@@ -260,4 +242,8 @@ function debounce(fn, delay) {
     clearTimeout(t);
     t = setTimeout(() => fn(...args), delay);
   };
+}
+
+function capitalize(str = "") {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
