@@ -6,17 +6,17 @@ const id = Number(params.get("id"));
 let allArticles = [];
 
 async function init() {
+  if (!id || isNaN(id)) {
+    renderError("Invalid article ID");
+    return;
+  }
+
   allArticles = await getArticles();
 
   const article = allArticles.find(a => a.id === id);
 
   if (!article) {
-    document.body.innerHTML = `
-      <div style="padding:40px;font-family:sans-serif">
-        <h2>Article not found</h2>
-        <a href="index.html">← Back to home</a>
-      </div>
-    `;
+    renderError("Article not found");
     return;
   }
 
@@ -27,6 +27,17 @@ async function init() {
 }
 
 init();
+
+/* ================= ERROR ================= */
+
+function renderError(msg) {
+  document.body.innerHTML = `
+    <div style="padding:40px;font-family:sans-serif">
+      <h2>${msg}</h2>
+      <a href="index.html">← Back to home</a>
+    </div>
+  `;
+}
 
 /* ================= ARTICLE ================= */
 
@@ -40,7 +51,7 @@ function renderArticle(article) {
 
   title.textContent = article.title || "Untitled";
 
-  const mainCategory = article.category[0] || "uncategorized";
+  const mainCategory = article.category?.[0] || "uncategorized";
 
   meta.innerHTML = `
     <span class="tag">${capitalize(mainCategory)}</span>
@@ -77,13 +88,11 @@ function renderRelated(article) {
 
       let score = 0;
 
-      // category overlap
       const sharedCategories = a.category.filter(c =>
         article.category.includes(c)
       );
       score += sharedCategories.length * 3;
 
-      // tag overlap
       const sharedTags = (a.tags || []).filter(t =>
         (article.tags || []).includes(t)
       );
