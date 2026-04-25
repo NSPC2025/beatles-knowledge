@@ -94,14 +94,22 @@ function renderRelated(article) {
 
       let score = 0;
 
-      // 🔧 FIX: normalize category comparison (CRITICAL)
-      const sharedCategories = aCats
-        .map(normalize)
-        .filter((c) => bCats.map(normalize).includes(c));
+      // 🔧 Categories (safe + normalized)
+      const normalizedBCats = new Set(bCats.map(normalize));
+
+      const sharedCategories = aCats.filter((c) =>
+        normalizedBCats.has(normalize(c))
+      );
 
       score += sharedCategories.length * 3;
 
-      const sharedTags = aTags.filter((t) => bTags.includes(t));
+      // 🔧 Tags (FIXED: fully normalized + safe + fast)
+      const normalizedBTags = new Set((bTags || []).map(normalize));
+
+      const sharedTags = aTags.filter((t) =>
+        normalizedBTags.has(normalize(t))
+      );
+
       score += sharedTags.length * 2;
 
       return score > 0 ? { a, score } : null;
