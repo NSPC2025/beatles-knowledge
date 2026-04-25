@@ -1,7 +1,7 @@
 import { getArticles } from "./dataLoader.js";
 
 const params = new URLSearchParams(window.location.search);
-const id = parseInt(params.get("id"));
+const id = Number(params.get("id"));
 
 let allArticles = [];
 
@@ -11,7 +11,12 @@ async function init() {
   const article = allArticles.find(a => a.id === id);
 
   if (!article) {
-    document.body.innerHTML = "<p>Article not found</p>";
+    document.body.innerHTML = `
+      <div style="padding:40px;font-family:sans-serif">
+        <h2>Article not found</h2>
+        <a href="index.html">← Back to home</a>
+      </div>
+    `;
     return;
   }
 
@@ -57,6 +62,11 @@ function renderRelated(article) {
     )
     .slice(0, 4);
 
+  if (!related.length) {
+    relatedEl.innerHTML = "<p>No related articles.</p>";
+    return;
+  }
+
   related.forEach(a => {
     const div = document.createElement("div");
     div.className = "article";
@@ -75,7 +85,6 @@ function renderRelated(article) {
   });
 }
 
-/* ✅ FIX: single delegated handler */
 function attachRelatedClick() {
   document.getElementById("related").addEventListener("click", (e) => {
     const card = e.target.closest(".article");
