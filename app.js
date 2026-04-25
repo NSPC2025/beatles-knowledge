@@ -7,6 +7,12 @@ function normalize(str = "") {
   return str.toLowerCase().trim();
 }
 
+function getPreview(article) {
+  return Array.isArray(article.content)
+    ? article.content.join(" ")
+    : article.content || "";
+}
+
 async function init() {
   articles = await getArticles();
   buildFilters();
@@ -16,6 +22,8 @@ async function init() {
 
 init();
 
+/* ================= FILTERS ================= */
+
 function buildFilters() {
   const container = document.getElementById("filters");
 
@@ -24,10 +32,10 @@ function buildFilters() {
   container.innerHTML = categories
     .map(
       cat => `
-    <button class="filter-btn ${cat === "all" ? "active" : ""}" data-cat="${cat}">
-      ${cat}
-    </button>
-  `
+      <button class="filter-btn ${cat === "all" ? "active" : ""}" data-cat="${cat}">
+        ${cat}
+      </button>
+    `
     )
     .join("");
 
@@ -47,13 +55,13 @@ function buildFilters() {
   });
 }
 
+/* ================= FILTER LOGIC ================= */
+
 function applyFilters() {
   const q = normalize(document.getElementById("search").value);
 
   const filtered = articles.filter((a) => {
-    const text = Array.isArray(a.content)
-      ? a.content.join(" ")
-      : a.content || "";
+    const text = getPreview(a);
 
     const matchesSearch =
       normalize(a.title).includes(q) ||
@@ -69,6 +77,8 @@ function applyFilters() {
   render(filtered);
   renderActiveFilters();
 }
+
+/* ================= ACTIVE FILTER UI ================= */
 
 function renderActiveFilters() {
   const box = document.getElementById("activeFilters");
@@ -89,6 +99,8 @@ function renderActiveFilters() {
     .join("");
 }
 
+/* ================= RENDER ================= */
+
 function render(list) {
   const container = document.getElementById("articles");
   container.innerHTML = "";
@@ -103,13 +115,12 @@ function render(list) {
     div.className = "article";
     div.dataset.id = a.id;
 
-    const previewText = Array.isArray(a.content)
-      ? a.content.join(" ")
-      : a.content || "";
+    const previewText = getPreview(a);
 
     const tagsHTML = (a.tags || [])
       .map(
-        (tag) => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`
+        (tag) =>
+          `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`
       )
       .join("");
 
@@ -123,14 +134,16 @@ function render(list) {
   });
 }
 
+/* ================= EVENTS ================= */
+
 document.getElementById("search").addEventListener("input", applyFilters);
 
-// safer single listener for whole grid
+/* single delegated handler */
 document.getElementById("articles").addEventListener("click", (e) => {
   const tag = e.target.closest(".clickable-tag");
+
   if (tag) {
-    const value = normalize(tag.dataset.tag);
-    document.getElementById("search").value = value;
+    document.getElementById("search").value = tag.dataset.tag;
     applyFilters();
     return;
   }
