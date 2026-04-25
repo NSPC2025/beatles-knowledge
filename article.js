@@ -31,13 +31,17 @@ function renderArticle(article) {
   document.getElementById("title").textContent = article.title;
 
   document.getElementById("meta").innerHTML = `
-    <span class="tag">${article.category}</span>
+    <span class="tag">${article.category || "uncategorized"}</span>
   `;
 
   const content = document.getElementById("content");
   content.innerHTML = "";
 
-  article.content.forEach(p => {
+  const paragraphs = Array.isArray(article.content)
+    ? article.content
+    : [article.content || ""];
+
+  paragraphs.forEach(p => {
     const el = document.createElement("p");
     el.textContent = p;
     content.appendChild(el);
