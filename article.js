@@ -17,6 +17,7 @@ async function init() {
 
   renderArticle(article);
   renderRelated(article);
+  attachRelatedClick();
 }
 
 init();
@@ -72,8 +73,11 @@ function renderRelated(article) {
 
     relatedEl.appendChild(div);
   });
+}
 
-  relatedEl.addEventListener("click", (e) => {
+/* ✅ FIX: single delegated handler */
+function attachRelatedClick() {
+  document.getElementById("related").addEventListener("click", (e) => {
     const card = e.target.closest(".article");
     if (!card) return;
 
