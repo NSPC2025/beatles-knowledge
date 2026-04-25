@@ -26,10 +26,16 @@ function readURLParams() {
   const search = params.get("search");
   const category = params.get("category");
 
-  // merge instead of overwrite
-  if (tag) searchQuery = tag.toLowerCase();
-  if (search) searchQuery = search.toLowerCase();
-  if (category) currentFilter = category.toLowerCase();
+  // FIX: predictable priority (search > tag)
+  if (search) {
+    searchQuery = search.toLowerCase();
+  } else if (tag) {
+    searchQuery = tag.toLowerCase();
+  }
+
+  if (category) {
+    currentFilter = category.toLowerCase();
+  }
 }
 
 /* ================= EVENTS ================= */
@@ -104,9 +110,14 @@ function buildFilters() {
   const container = document.getElementById("filters");
   if (!container) return;
 
+  // ✅ FIX: normalize ALL categories consistently
   const categories = [
     "all",
-    ...new Set(articles.flatMap((a) => a.category || [])),
+    ...new Set(
+      articles
+        .flatMap((a) => a.category || [])
+        .map((c) => (c || "").toLowerCase().trim())
+    ),
   ];
 
   container.innerHTML = categories
@@ -122,7 +133,7 @@ function buildFilters() {
     .join("");
 }
 
-/* ================= SEARCH ENGINE (FIXED CORE) ================= */
+/* ================= SEARCH ENGINE ================= */
 
 function applyFilters() {
   const words = searchQuery
@@ -140,10 +151,13 @@ function applyFilters() {
 
       if (!words.length) return true;
 
-      // ONE unified search field (IMPORTANT FIX)
       const text = article._searchText || "";
 
-      return words.every((w) => text.includes(w));
+      for (const w of words) {
+        if (!text.includes(w)) return false;
+      }
+
+      return true;
     })
     .map((article) => {
       if (!words.length) return { article, score: 1 };
@@ -152,7 +166,6 @@ function applyFilters() {
       const text = article._searchText || "";
 
       for (const w of words) {
-        // weighted scoring (stable for large datasets)
         if (article._title?.includes(w)) score += 5;
         if (article._tags?.includes(w)) score += 3;
         if (article._categories?.includes(w)) score += 2;
