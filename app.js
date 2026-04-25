@@ -26,15 +26,15 @@ function readURLParams() {
   const search = params.get("search");
   const category = params.get("category");
 
-  // FIX: predictable priority (search > tag)
   if (search) {
     searchQuery = search.toLowerCase();
   } else if (tag) {
     searchQuery = tag.toLowerCase();
   }
 
+  // 🔧 FIX: normalize category consistently
   if (category) {
-    currentFilter = category.toLowerCase();
+    currentFilter = normalize(category);
   }
 }
 
@@ -79,7 +79,7 @@ function attachEvents() {
     const btn = e.target.closest(".filter-btn");
     if (!btn) return;
 
-    currentFilter = (btn.dataset.cat || "all").toLowerCase();
+    currentFilter = normalize(btn.dataset.cat || "all");
 
     document.querySelectorAll(".filter-btn").forEach((b) =>
       b.classList.remove("active")
@@ -110,22 +110,20 @@ function buildFilters() {
   const container = document.getElementById("filters");
   if (!container) return;
 
-  // ✅ FIX: normalize ALL categories consistently
+  // 🔧 FIX: strict normalization at source
   const categories = [
     "all",
     ...new Set(
       articles
         .flatMap((a) => a.category || [])
-        .map((c) => (c || "").toLowerCase().trim())
+        .map(normalize)
     ),
   ];
 
   container.innerHTML = categories
     .map(
       (cat) => `
-      <button class="filter-btn ${
-        cat === currentFilter ? "active" : ""
-      }" data-cat="${cat}">
+      <button class="filter-btn ${cat === currentFilter ? "active" : ""}" data-cat="${cat}">
         ${capitalize(cat)}
       </button>
     `
@@ -145,7 +143,7 @@ function applyFilters() {
     .filter((article) => {
       const matchesCategory =
         currentFilter === "all" ||
-        (article.category || []).includes(currentFilter);
+        (article.category || []).map(normalize).includes(currentFilter);
 
       if (!matchesCategory) return false;
 
@@ -277,6 +275,10 @@ function debounce(fn, delay) {
     clearTimeout(t);
     t = setTimeout(() => fn(...args), delay);
   };
+}
+
+function normalize(str = "") {
+  return str.toLowerCase().trim();
 }
 
 function capitalize(str = "") {
