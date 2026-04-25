@@ -23,9 +23,12 @@ async function init() {
   renderArticle(article);
   renderRelated(article);
   attachRelatedClick();
+  attachTagClick();
 }
 
 init();
+
+/* ================= ARTICLE ================= */
 
 function renderArticle(article) {
   const title = document.getElementById("title");
@@ -54,9 +57,11 @@ function renderArticle(article) {
   });
 
   tags.innerHTML = (article.tags || [])
-    .map(t => `<span class="tag">${t}</span>`)
+    .map(t => `<span class="tag clickable-tag" data-tag="${t}">${t}</span>`)
     .join("");
 }
+
+/* ================= RELATED ================= */
 
 function renderRelated(article) {
   const relatedEl = document.getElementById("related");
@@ -97,6 +102,8 @@ function renderRelated(article) {
   });
 }
 
+/* ================= EVENTS ================= */
+
 function attachRelatedClick() {
   const relatedEl = document.getElementById("related");
   if (!relatedEl) return;
@@ -106,5 +113,19 @@ function attachRelatedClick() {
     if (!card) return;
 
     window.location.href = `article.html?id=${card.dataset.id}`;
+  });
+}
+
+/* NEW: tag click support */
+function attachTagClick() {
+  const tags = document.getElementById("tags");
+  if (!tags) return;
+
+  tags.addEventListener("click", (e) => {
+    const tag = e.target.closest(".clickable-tag");
+    if (!tag) return;
+
+    const value = tag.dataset.tag;
+    window.location.href = `index.html?tag=${encodeURIComponent(value)}`;
   });
 }
