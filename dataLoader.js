@@ -13,18 +13,25 @@ function prepareArticles(data) {
       : a.content || "";
 
     const tags = (a.tags || []).map(t => normalize(t));
-    const category = normalize(a.category || "uncategorized");
+
+    const categories = Array.isArray(a.category)
+      ? a.category.map(c => normalize(c))
+      : [normalize(a.category || "uncategorized")];
 
     return {
       ...a,
-      category,
+      category: categories,
       tags,
 
       _title: normalize(a.title || ""),
       _content: normalize(contentText),
       _tags: tags.join(" "),
+      _categories: categories.join(" "),
       _searchText: normalize(
-        (a.title || "") + " " + contentText + " " + tags.join(" ")
+        (a.title || "") + " " +
+        contentText + " " +
+        tags.join(" ") + " " +
+        categories.join(" ")
       )
     };
   });
