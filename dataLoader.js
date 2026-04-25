@@ -1,5 +1,35 @@
 let cachedArticles = null;
 
+/* ===== normalize ===== */
+function normalize(str = "") {
+  return str.toLowerCase().trim();
+}
+
+/* ===== preprocess ===== */
+function prepareArticles(data) {
+  return data.map(a => {
+    const contentText = Array.isArray(a.content)
+      ? a.content.join(" ")
+      : a.content || "";
+
+    const tags = (a.tags || []).map(t => normalize(t));
+    const category = normalize(a.category || "uncategorized");
+
+    return {
+      ...a,
+      category,
+      tags,
+
+      _title: normalize(a.title || ""),
+      _content: normalize(contentText),
+      _tags: tags.join(" "),
+      _searchText: normalize(
+        (a.title || "") + " " + contentText + " " + tags.join(" ")
+      )
+    };
+  });
+}
+
 export async function getArticles() {
   try {
     if (cachedArticles) return cachedArticles;
@@ -10,7 +40,9 @@ export async function getArticles() {
       throw new Error("Failed to load articles.json");
     }
 
-    cachedArticles = await res.json();
+    const raw = await res.json();
+    cachedArticles = prepareArticles(raw);
+
     return cachedArticles;
 
   } catch (err) {
