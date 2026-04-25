@@ -13,7 +13,7 @@ async function init() {
 
   allArticles = await getArticles();
 
-  const article = allArticles.find(a => a.id === id);
+  const article = allArticles.find((a) => a.id === id);
 
   if (!article) {
     renderError("Article not found");
@@ -63,18 +63,21 @@ function renderArticle(article) {
     ? article.content
     : [article.content || ""];
 
-  paragraphs.forEach(p => {
+  paragraphs.forEach((p) => {
     const el = document.createElement("p");
     el.textContent = p;
     content.appendChild(el);
   });
 
   tags.innerHTML = (article.tags || [])
-    .map(t => `<span class="tag clickable-tag" data-tag="${t}">${t}</span>`)
+    .map(
+      (t) =>
+        `<span class="tag clickable-tag" data-tag="${t}">${t}</span>`
+    )
     .join("");
 }
 
-/* ================= RELATED ================= */
+/* ================= RELATED (FIXED PREVIEW) ================= */
 
 function renderRelated(article) {
   const relatedEl = document.getElementById("related");
@@ -83,17 +86,17 @@ function renderRelated(article) {
   relatedEl.innerHTML = "";
 
   const related = allArticles
-    .map(a => {
+    .map((a) => {
       if (a.id === article.id) return null;
 
       let score = 0;
 
-      const sharedCategories = a.category.filter(c =>
+      const sharedCategories = a.category.filter((c) =>
         article.category.includes(c)
       );
       score += sharedCategories.length * 3;
 
-      const sharedTags = (a.tags || []).filter(t =>
+      const sharedTags = (a.tags || []).filter((t) =>
         (article.tags || []).includes(t)
       );
       score += sharedTags.length * 2;
@@ -103,19 +106,19 @@ function renderRelated(article) {
     .filter(Boolean)
     .sort((x, y) => y.score - x.score)
     .slice(0, 4)
-    .map(x => x.a);
+    .map((x) => x.a);
 
   if (!related.length) {
     relatedEl.innerHTML = "<p>No related articles.</p>";
     return;
   }
 
-  related.forEach(a => {
+  related.forEach((a) => {
     const div = document.createElement("div");
     div.className = "article";
     div.dataset.id = a.id;
 
-    const preview = a._content || "";
+    const preview = (a.content || []).join(" ");
 
     div.innerHTML = `
       <h3>${a.title}</h3>
