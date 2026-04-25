@@ -105,7 +105,7 @@ function buildFilters() {
 
   const categories = [
     "all",
-    ...new Set(articles.flatMap((a) => a.category)),
+    ...new Set(articles.flatMap((a) => a.category || [])),
   ];
 
   container.innerHTML = categories
@@ -121,28 +121,25 @@ function buildFilters() {
     .join("");
 }
 
-/* ================= FILTER ENGINE (FIXED) ================= */
+/* ================= FILTER ENGINE ================= */
 
 function applyFilters() {
-  const words = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+  const words = searchQuery.split(/\s+/).filter(Boolean);
 
   const filtered = articles
     .filter((article) => {
-      // category FIRST (performance + correctness)
+      const cats = article.category || [];
+
       const matchesCategory =
-        currentFilter === "all" ||
-        article.category.includes(currentFilter);
+        currentFilter === "all" || cats.includes(currentFilter);
 
       if (!matchesCategory) return false;
 
-      // if no search → include
       if (!words.length) return true;
 
-      // search match
       return words.every((w) => article._searchText.includes(w));
     })
     .map((article) => {
-      // scoring AFTER filtering
       let score = 0;
 
       for (const w of words) {
@@ -178,8 +175,8 @@ function render(list) {
     div.className = "article";
     div.dataset.id = article.id;
 
-    const preview = article._content;
-    const mainCategory = article.category[0] || "uncategorized";
+    const preview = article._content || "";
+    const mainCategory = article.category?.[0] || "uncategorized";
 
     const tagsHTML = (article.tags || [])
       .map(
