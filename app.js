@@ -99,7 +99,10 @@ function buildFilters() {
   const container = document.getElementById("filters");
   if (!container) return;
 
-  const categories = ["all", ...new Set(articles.map(a => a.category))];
+  const categories = [
+  "all",
+  ...new Set(articles.flatMap(a => a.category))
+];
 
   container.innerHTML = categories.map(cat => `
     <button class="filter-btn ${cat === currentFilter ? "active" : ""}" data-cat="${cat}">
@@ -133,7 +136,7 @@ function applyFilters() {
 
       const matchesCategory =
         currentFilter === "all" ||
-        article.category === currentFilter;
+        article.category.includes(currentFilter);
 
       return matchesCategory ? { article, score } : null;
     })
