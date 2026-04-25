@@ -44,6 +44,33 @@ header p {
   opacity: 0.9;
 }
 
+/* ===== Filters ===== */
+.filters {
+  margin-top: 10px;
+}
+
+.filter-btn {
+  border: 1px solid var(--border);
+  background: white;
+  padding: 6px 12px;
+  margin: 5px 6px 5px 0;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.filter-btn.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
 /* ===== Search ===== */
 input {
   width: 100%;
