@@ -3,6 +3,10 @@ import { getArticles } from "./dataLoader.js";
 let articles = [];
 let currentFilter = "all";
 
+function normalize(str = "") {
+  return str.toLowerCase().trim();
+}
+
 // Load data
 async function init() {
   articles = await getArticles();
@@ -39,17 +43,17 @@ function buildFilters() {
 
 // Apply search + category filters
 function applyFilters() {
-  const q = document.getElementById("search").value.toLowerCase();
+  const q = normalize(document.getElementById("search").value);
 
   const filtered = articles.filter(a => {
     const text = Array.isArray(a.content)
       ? a.content.join(" ")
-      : a.content;
+      : a.content || "";
 
     const matchesSearch =
-      a.title.toLowerCase().includes(q) ||
-      text.toLowerCase().includes(q) ||
-      (a.tags || []).join(" ").toLowerCase().includes(q);
+      normalize(a.title).includes(q) ||
+      normalize(text).includes(q) ||
+      (a.tags || []).some(t => normalize(t).includes(q));
 
     const matchesCategory =
       currentFilter === "all" || a.category === currentFilter;
@@ -84,7 +88,7 @@ function render(list) {
   const container = document.getElementById("articles");
   container.innerHTML = "";
 
-  if (list.length === 0) {
+  if (!list.length) {
     container.innerHTML = "<p>No articles found.</p>";
     return;
   }
@@ -99,7 +103,7 @@ function render(list) {
 
     const previewText = Array.isArray(a.content)
       ? a.content.join(" ")
-      : a.content;
+      : a.content || "";
 
     div.innerHTML = `
       <h3>${a.title}</h3>
@@ -117,7 +121,7 @@ function render(list) {
       tagEl.onclick = (e) => {
         e.stopPropagation();
 
-        const tag = tagEl.dataset.tag.toLowerCase();
+        const tag = normalize(tagEl.dataset.tag);
         document.getElementById("search").value = tag;
         applyFilters();
       };
