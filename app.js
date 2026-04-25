@@ -9,7 +9,7 @@ function normalize(str = "") {
   return str.toLowerCase().trim();
 }
 
-/* ===== preprocess once (IMPORTANT) ===== */
+/* ===== preprocess once ===== */
 function prepareArticles(data) {
   return data.map(a => ({
     ...a,
@@ -77,7 +77,7 @@ function attachEvents() {
   });
 }
 
-/* ================= FILTERS ================= */
+/* ================= FILTER BUTTONS ================= */
 
 function buildFilters() {
   const container = document.getElementById("filters");
@@ -111,7 +111,7 @@ function applyFilters() {
   renderActiveFilters();
 }
 
-/* ================= UI ================= */
+/* ================= RENDER ================= */
 
 function render(list) {
   const container = document.getElementById("articles");
@@ -145,22 +145,56 @@ function render(list) {
   });
 }
 
+/* ================= ACTIVE FILTERS (FIXED UX) ================= */
+
 function renderActiveFilters() {
   const box = document.getElementById("activeFilters");
 
   const parts = [];
 
   if (currentFilter !== "all") {
-    parts.push(`Category: ${currentFilter}`);
+    parts.push({
+      label: `Category: ${currentFilter}`,
+      type: "category"
+    });
   }
 
   if (searchQuery.trim()) {
-    parts.push(`Search: "${searchQuery}"`);
+    parts.push({
+      label: `Search: "${searchQuery}"`,
+      type: "search"
+    });
   }
 
-  box.innerHTML = parts
-    .map(p => `<span class="active-filter">${p}</span>`)
-    .join("");
+  box.innerHTML = parts.map(p => `
+    <span class="active-filter" data-type="${p.type}">
+      ${p.label} ✕
+    </span>
+  `).join("");
+
+  // click to clear individual filters
+  box.querySelectorAll(".active-filter").forEach(el => {
+    el.addEventListener("click", () => {
+      const type = el.dataset.type;
+
+      if (type === "category") {
+        currentFilter = "all";
+
+        document.querySelectorAll(".filter-btn")
+          .forEach(b => b.classList.remove("active"));
+
+        document.querySelector('[data-cat="all"]')
+          .classList.add("active");
+      }
+
+      if (type === "search") {
+        searchQuery = "";
+        document.getElementById("search").value = "";
+      }
+
+      applyFilters();
+    });
+  });
 }
 
 /* ================= UTIL ================= */
