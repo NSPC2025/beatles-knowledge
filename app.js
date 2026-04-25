@@ -7,7 +7,6 @@ function normalize(str = "") {
   return str.toLowerCase().trim();
 }
 
-// Load data
 async function init() {
   articles = await getArticles();
   buildFilters();
@@ -17,35 +16,41 @@ async function init() {
 
 init();
 
-// Build category filters
 function buildFilters() {
   const container = document.getElementById("filters");
 
   const categories = ["all", ...new Set(articles.map(a => a.category))];
 
-  container.innerHTML = categories.map(cat => `
+  container.innerHTML = categories
+    .map(
+      cat => `
     <button class="filter-btn ${cat === "all" ? "active" : ""}" data-cat="${cat}">
       ${cat}
     </button>
-  `).join("");
+  `
+    )
+    .join("");
 
-  document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.onclick = () => {
-      currentFilter = btn.dataset.cat;
+  container.addEventListener("click", (e) => {
+    const btn = e.target.closest(".filter-btn");
+    if (!btn) return;
 
-      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
+    currentFilter = btn.dataset.cat;
 
-      applyFilters();
-    };
+    document
+      .querySelectorAll(".filter-btn")
+      .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    applyFilters();
   });
 }
 
-// Apply search + category filters
 function applyFilters() {
   const q = normalize(document.getElementById("search").value);
 
-  const filtered = articles.filter(a => {
+  const filtered = articles.filter((a) => {
     const text = Array.isArray(a.content)
       ? a.content.join(" ")
       : a.content || "";
@@ -53,7 +58,7 @@ function applyFilters() {
     const matchesSearch =
       normalize(a.title).includes(q) ||
       normalize(text).includes(q) ||
-      (a.tags || []).some(t => normalize(t).includes(q));
+      (a.tags || []).some((t) => normalize(t).includes(q));
 
     const matchesCategory =
       currentFilter === "all" || a.category === currentFilter;
@@ -65,7 +70,6 @@ function applyFilters() {
   renderActiveFilters();
 }
 
-// Active filters UI
 function renderActiveFilters() {
   const box = document.getElementById("activeFilters");
   const search = document.getElementById("search").value;
@@ -80,10 +84,11 @@ function renderActiveFilters() {
     parts.push(`Search: "${search}"`);
   }
 
-  box.innerHTML = parts.map(p => `<span class="active-filter">${p}</span>`).join("");
+  box.innerHTML = parts
+    .map((p) => `<span class="active-filter">${p}</span>`)
+    .join("");
 }
 
-// Render articles
 function render(list) {
   const container = document.getElementById("articles");
   container.innerHTML = "";
@@ -93,17 +98,20 @@ function render(list) {
     return;
   }
 
-  list.forEach(a => {
+  list.forEach((a) => {
     const div = document.createElement("div");
     div.className = "article";
-
-    const tagsHTML = (a.tags || [])
-      .map(tag => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`)
-      .join("");
+    div.dataset.id = a.id;
 
     const previewText = Array.isArray(a.content)
       ? a.content.join(" ")
       : a.content || "";
+
+    const tagsHTML = (a.tags || [])
+      .map(
+        (tag) => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`
+      )
+      .join("");
 
     div.innerHTML = `
       <h3>${a.title}</h3>
@@ -111,22 +119,24 @@ function render(list) {
       <div class="tags">${tagsHTML}</div>
     `;
 
-    div.onclick = () => {
-      window.location.href = `article.html?id=${a.id}`;
-    };
-
     container.appendChild(div);
-
-    div.querySelectorAll(".clickable-tag").forEach(tagEl => {
-      tagEl.onclick = (e) => {
-        e.stopPropagation();
-
-        const tag = normalize(tagEl.dataset.tag);
-        document.getElementById("search").value = tag;
-        applyFilters();
-      };
-    });
   });
 }
 
 document.getElementById("search").addEventListener("input", applyFilters);
+
+// safer single listener for whole grid
+document.getElementById("articles").addEventListener("click", (e) => {
+  const tag = e.target.closest(".clickable-tag");
+  if (tag) {
+    const value = normalize(tag.dataset.tag);
+    document.getElementById("search").value = value;
+    applyFilters();
+    return;
+  }
+
+  const card = e.target.closest(".article");
+  if (card) {
+    window.location.href = `article.html?id=${card.dataset.id}`;
+  }
+});
