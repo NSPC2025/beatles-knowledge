@@ -14,7 +14,7 @@ function prepareArticles(data) {
   return data.map(a => ({
     ...a,
     _searchText: normalize(
-      a.title +
+      (a.title || "") +
       " " +
       (Array.isArray(a.content) ? a.content.join(" ") : a.content || "") +
       " " +
@@ -40,18 +40,22 @@ init();
 
 function attachEvents() {
   const searchInput = document.getElementById("search");
+  const articlesEl = document.getElementById("articles");
+  const filtersEl = document.getElementById("filters");
+
+  if (!searchInput || !articlesEl || !filtersEl) return;
 
   searchInput.addEventListener("input", debounce((e) => {
-    searchQuery = e.target.value;
+    searchQuery = e.target.value || "";
     applyFilters();
   }, 150));
 
-  document.getElementById("articles").addEventListener("click", (e) => {
+  articlesEl.addEventListener("click", (e) => {
     const tag = e.target.closest(".clickable-tag");
 
     if (tag) {
-      searchQuery = tag.dataset.tag;
-      document.getElementById("search").value = searchQuery;
+      searchQuery = tag.dataset.tag || "";
+      searchInput.value = searchQuery;
       applyFilters();
       return;
     }
@@ -62,11 +66,11 @@ function attachEvents() {
     }
   });
 
-  document.getElementById("filters").addEventListener("click", (e) => {
+  filtersEl.addEventListener("click", (e) => {
     const btn = e.target.closest(".filter-btn");
     if (!btn) return;
 
-    currentFilter = btn.dataset.cat;
+    currentFilter = btn.dataset.cat || "all";
 
     document.querySelectorAll(".filter-btn")
       .forEach(b => b.classList.remove("active"));
@@ -81,6 +85,7 @@ function attachEvents() {
 
 function buildFilters() {
   const container = document.getElementById("filters");
+  if (!container) return;
 
   const categories = ["all", ...new Set(articles.map(a => a.category))];
 
@@ -115,6 +120,8 @@ function applyFilters() {
 
 function render(list) {
   const container = document.getElementById("articles");
+  if (!container) return;
+
   container.innerHTML = "";
 
   if (!list.length) {
@@ -145,25 +152,20 @@ function render(list) {
   });
 }
 
-/* ================= ACTIVE FILTERS (FIXED UX) ================= */
+/* ================= ACTIVE FILTERS ================= */
 
 function renderActiveFilters() {
   const box = document.getElementById("activeFilters");
+  if (!box) return;
 
   const parts = [];
 
   if (currentFilter !== "all") {
-    parts.push({
-      label: `Category: ${currentFilter}`,
-      type: "category"
-    });
+    parts.push({ label: `Category: ${currentFilter}`, type: "category" });
   }
 
   if (searchQuery.trim()) {
-    parts.push({
-      label: `Search: "${searchQuery}"`,
-      type: "search"
-    });
+    parts.push({ label: `Search: "${searchQuery}"`, type: "search" });
   }
 
   box.innerHTML = parts.map(p => `
@@ -172,7 +174,6 @@ function renderActiveFilters() {
     </span>
   `).join("");
 
-  // click to clear individual filters
   box.querySelectorAll(".active-filter").forEach(el => {
     el.addEventListener("click", () => {
       const type = el.dataset.type;
@@ -183,13 +184,14 @@ function renderActiveFilters() {
         document.querySelectorAll(".filter-btn")
           .forEach(b => b.classList.remove("active"));
 
-        document.querySelector('[data-cat="all"]')
-          .classList.add("active");
+        const allBtn = document.querySelector('[data-cat="all"]');
+        if (allBtn) allBtn.classList.add("active");
       }
 
       if (type === "search") {
         searchQuery = "";
-        document.getElementById("search").value = "";
+        const input = document.getElementById("search");
+        if (input) input.value = "";
       }
 
       applyFilters();
