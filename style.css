@@ -169,8 +169,18 @@ input:focus {
   margin-top: 5px;
 }
 
-/* ===== Article Page (UPDATED) ===== */
+/* ===== NEW: clickable tags ===== */
+.clickable-tag {
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
 
+.clickable-tag:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* ===== Article Page ===== */
 .article-page {
   max-width: 800px;
 }
