@@ -29,12 +29,24 @@ async function init() {
   const raw = await getArticles();
   articles = prepareArticles(raw);
 
+  readURLParams();   // ✅ NEW
   buildFilters();
   attachEvents();
   applyFilters();
 }
 
 init();
+
+/* ================= URL PARAMS ================= */
+
+function readURLParams() {
+  const params = new URLSearchParams(window.location.search);
+
+  const tag = params.get("tag");
+  if (tag) {
+    searchQuery = tag;
+  }
+}
 
 /* ================= EVENTS ================= */
 
@@ -44,6 +56,8 @@ function attachEvents() {
   const filtersEl = document.getElementById("filters");
 
   if (!searchInput || !articlesEl || !filtersEl) return;
+
+  searchInput.value = searchQuery; // sync UI
 
   searchInput.addEventListener("input", debounce((e) => {
     searchQuery = e.target.value || "";
