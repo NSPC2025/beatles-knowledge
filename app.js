@@ -1,15 +1,17 @@
+import { getArticles } from "./dataLoader.js";
+
 let articles = [];
 let currentFilter = "all";
 
 // Load data
-fetch('data/articles.json')
-  .then(res => res.json())
-  .then(data => {
-    articles = data;
-    buildFilters();
-    render(articles);
-    renderActiveFilters();
-  });
+async function init() {
+  articles = await getArticles();
+  buildFilters();
+  render(articles);
+  renderActiveFilters();
+}
+
+init();
 
 // Build category filters
 function buildFilters() {
@@ -59,7 +61,7 @@ function applyFilters() {
   renderActiveFilters();
 }
 
-// Render active filters UI
+// Active filters UI
 function renderActiveFilters() {
   const box = document.getElementById("activeFilters");
   const search = document.getElementById("search").value;
@@ -74,9 +76,7 @@ function renderActiveFilters() {
     parts.push(`Search: "${search}"`);
   }
 
-  box.innerHTML = parts
-    .map(p => `<span class="active-filter">${p}</span>`)
-    .join("");
+  box.innerHTML = parts.map(p => `<span class="active-filter">${p}</span>`).join("");
 }
 
 // Render articles
@@ -93,12 +93,10 @@ function render(list) {
     const div = document.createElement("div");
     div.className = "article";
 
-    // Build clickable tags
     const tagsHTML = (a.tags || [])
       .map(tag => `<span class="tag clickable-tag" data-tag="${tag}">${tag}</span>`)
       .join("");
 
-    // Fix content preview (array or string)
     const previewText = Array.isArray(a.content)
       ? a.content.join(" ")
       : a.content;
@@ -109,20 +107,17 @@ function render(list) {
       <div class="tags">${tagsHTML}</div>
     `;
 
-    // Open article page when clicking card
     div.onclick = () => {
       window.location.href = `article.html?id=${a.id}`;
     };
 
     container.appendChild(div);
 
-    // Tag click handling
     div.querySelectorAll(".clickable-tag").forEach(tagEl => {
       tagEl.onclick = (e) => {
         e.stopPropagation();
 
         const tag = tagEl.dataset.tag.toLowerCase();
-
         document.getElementById("search").value = tag;
         applyFilters();
       };
@@ -130,5 +125,4 @@ function render(list) {
   });
 }
 
-// Search listener
 document.getElementById("search").addEventListener("input", applyFilters);
