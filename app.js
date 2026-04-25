@@ -121,14 +121,16 @@ function buildFilters() {
     .join("");
 }
 
-/* ================= FILTER ENGINE (SAFE VERSION) ================= */
+/* ================= FILTER ENGINE (ROBUST VERSION) ================= */
 
 function applyFilters() {
   const words = searchQuery.trim().split(/\s+/).filter(Boolean);
 
   const filtered = articles
     .filter((article) => {
-      const cats = article.category || [];
+      const cats = (article.category || []).map((c) =>
+        String(c).toLowerCase()
+      );
 
       const matchesCategory =
         currentFilter === "all" || cats.includes(currentFilter);
