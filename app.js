@@ -26,8 +26,8 @@ function readURLParams() {
   const search = params.get("search");
   const category = params.get("category");
 
-  if (tag) searchQuery = tag;
-  if (search) searchQuery = search;
+  if (tag) searchQuery = tag.toLowerCase();
+  if (search) searchQuery = search.toLowerCase();
   if (category) currentFilter = category.toLowerCase();
 }
 
@@ -43,7 +43,7 @@ function attachEvents() {
   searchInput.value = searchQuery;
 
   searchInput.addEventListener("input", debounce((e) => {
-    searchQuery = e.target.value || "";
+    searchQuery = (e.target.value || "").toLowerCase();
     updateURL();
     applyFilters();
   }, 150));
@@ -52,7 +52,7 @@ function attachEvents() {
     const tag = e.target.closest(".clickable-tag");
 
     if (tag) {
-      searchQuery = tag.dataset.tag || "";
+      searchQuery = (tag.dataset.tag || "").toLowerCase();
       searchInput.value = searchQuery;
       updateURL();
       applyFilters();
@@ -69,7 +69,7 @@ function attachEvents() {
     const btn = e.target.closest(".filter-btn");
     if (!btn) return;
 
-    currentFilter = btn.dataset.cat || "all";
+    currentFilter = (btn.dataset.cat || "all").toLowerCase();
 
     document.querySelectorAll(".filter-btn")
       .forEach(b => b.classList.remove("active"));
@@ -124,9 +124,7 @@ function applyFilters() {
       let score = 0;
 
       for (const w of words) {
-        if (!article._searchText.includes(w)) {
-          return null;
-        }
+        if (!article._searchText.includes(w)) return null;
 
         if (article._title.includes(w)) score += 3;
         else if (article._tags.includes(w)) score += 2;
@@ -135,7 +133,7 @@ function applyFilters() {
 
       const matchesCategory =
         currentFilter === "all" ||
-        article.category.includes(currentFilter);
+        article.category.some(c => c === currentFilter);
 
       return matchesCategory ? { article, score } : null;
     })
@@ -166,7 +164,6 @@ function render(list) {
     div.dataset.id = article.id;
 
     const preview = article._content;
-
     const mainCategory = article.category[0] || "uncategorized";
 
     const tagsHTML = (article.tags || [])
