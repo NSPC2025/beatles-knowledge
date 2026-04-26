@@ -214,10 +214,38 @@ input:focus {
   margin-bottom: 20px;
 }
 
-/* 🔥 NEW: Section Titles */
+/* ===== Section Titles ===== */
 .article-content h2 {
   margin-top: 30px;
   font-size: 22px;
+}
+
+/* ===== TOC (NEW) ===== */
+.toc {
+  background: #f1f5f9;
+  border: 1px solid var(--border);
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+}
+
+.toc ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.toc li {
+  margin-bottom: 6px;
+}
+
+.toc a {
+  text-decoration: none;
+  color: var(--primary);
+  font-size: 14px;
+}
+
+.toc a:hover {
+  text-decoration: underline;
 }
 
 hr {
@@ -226,7 +254,7 @@ hr {
   border-top: 1px solid var(--border);
 }
 
-/* Back link */
+/* ===== Back link ===== */
 .back {
   display: inline-block;
   margin-bottom: 20px;
