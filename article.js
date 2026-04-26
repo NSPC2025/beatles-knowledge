@@ -52,20 +52,35 @@ function renderArticle(article) {
   title.textContent = article.title || "Untitled";
 
   const mainCategory = article.category?.[0] || "uncategorized";
-
   meta.innerHTML = `<span class="tag">${capitalize(mainCategory)}</span>`;
 
   content.innerHTML = "";
 
-  const paragraphs = Array.isArray(article.content)
-    ? article.content
-    : [article.content || ""];
+  // 🔥 Sections support (NEW)
+  if (article.sections) {
+    article.sections.forEach(section => {
+      const h2 = document.createElement("h2");
+      h2.textContent = section.title;
+      content.appendChild(h2);
 
-  paragraphs.forEach((p) => {
-    const el = document.createElement("p");
-    el.textContent = p;
-    content.appendChild(el);
-  });
+      (section.content || []).forEach(p => {
+        const el = document.createElement("p");
+        el.textContent = p;
+        content.appendChild(el);
+      });
+    });
+  } else {
+    // fallback for old articles
+    const paragraphs = Array.isArray(article.content)
+      ? article.content
+      : [article.content || ""];
+
+    paragraphs.forEach(p => {
+      const el = document.createElement("p");
+      el.textContent = p;
+      content.appendChild(el);
+    });
+  }
 
   tags.innerHTML = (article.tags || [])
     .map(
@@ -94,22 +109,16 @@ function renderRelated(article) {
 
       let score = 0;
 
-      // 🔧 Categories (safe + normalized)
       const normalizedBCats = new Set(bCats.map(normalize));
-
       const sharedCategories = aCats.filter((c) =>
         normalizedBCats.has(normalize(c))
       );
-
       score += sharedCategories.length * 3;
 
-      // 🔧 Tags (FIXED: fully normalized + safe + fast)
       const normalizedBTags = new Set((bTags || []).map(normalize));
-
       const sharedTags = aTags.filter((t) =>
         normalizedBTags.has(normalize(t))
       );
-
       score += sharedTags.length * 2;
 
       return score > 0 ? { a, score } : null;
@@ -129,9 +138,7 @@ function renderRelated(article) {
     div.className = "article";
     div.dataset.id = a.id;
 
-    const preview = Array.isArray(a.content)
-      ? a.content.join(" ")
-      : a.content || "";
+    const preview = a._content || "";
 
     div.innerHTML = `
       <h3>${a.title}</h3>
