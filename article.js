@@ -56,26 +56,46 @@ function renderArticle(article) {
 
   content.innerHTML = "";
 
-  // 🔥 Sections support (NEW)
+  // 🔥 TABLE OF CONTENTS (NEW)
+  if (article.sections && article.sections.length > 1) {
+    const toc = document.createElement("div");
+    toc.className = "toc";
+
+    toc.innerHTML = `
+      <strong>Contents</strong>
+      <ul>
+        ${article.sections
+          .map(
+            (s, i) =>
+              `<li><a href="#section-${i}">${s.title}</a></li>`
+          )
+          .join("")}
+      </ul>
+    `;
+
+    content.appendChild(toc);
+  }
+
+  // 🔥 Sections
   if (article.sections) {
-    article.sections.forEach(section => {
+    article.sections.forEach((section, i) => {
       const h2 = document.createElement("h2");
       h2.textContent = section.title;
+      h2.id = `section-${i}`; // 👈 anchor target
       content.appendChild(h2);
 
-      (section.content || []).forEach(p => {
+      (section.content || []).forEach((p) => {
         const el = document.createElement("p");
         el.textContent = p;
         content.appendChild(el);
       });
     });
   } else {
-    // fallback for old articles
     const paragraphs = Array.isArray(article.content)
       ? article.content
       : [article.content || ""];
 
-    paragraphs.forEach(p => {
+    paragraphs.forEach((p) => {
       const el = document.createElement("p");
       el.textContent = p;
       content.appendChild(el);
