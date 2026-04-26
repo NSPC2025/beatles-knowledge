@@ -118,7 +118,7 @@ input:focus {
   border-color: var(--primary);
 }
 
-/* ===== ACTIVE FILTERS (NEW) ===== */
+/* ===== ACTIVE FILTERS ===== */
 .active-filters {
   margin-top: 10px;
   display: flex;
@@ -185,7 +185,6 @@ input:focus {
   margin-top: 5px;
 }
 
-/* clickable tags */
 .clickable-tag {
   cursor: pointer;
   transition: all 0.15s ease;
@@ -213,6 +212,12 @@ input:focus {
   font-size: 18px;
   line-height: 1.8;
   margin-bottom: 20px;
+}
+
+/* 🔥 NEW: Section Titles */
+.article-content h2 {
+  margin-top: 30px;
+  font-size: 22px;
 }
 
 hr {
